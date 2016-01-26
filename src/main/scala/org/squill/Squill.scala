@@ -16,7 +16,7 @@ object Squill extends Transaction with Query with Update {
     WithTransaction(txBlock)(connection)
   }
 
-  def query[T](sqlStatement: String, params: Any*)(f: ResultSet => T)(implicit connection: Connection): Seq[T] = {
+  def query[T](sqlStatement: String, params: Any*)(f: ResultSet => T)(implicit connection: Connection): Iterator[T] = {
     var ps = Option.empty[PreparedStatement]
     var rs = Option.empty[ResultSet]
     try {
@@ -24,12 +24,12 @@ object Squill extends Transaction with Query with Update {
       ps.map(_.executeQuery()).map {
         r => {
           rs = Some(r)
-          ResultSetIterator(r).map(f).toList
+          ResultSetIterator(r).map(f)
         }
-      } getOrElse Seq.empty[T]
+      } getOrElse Iterator.empty[T]
     } finally {
-      rs.map(_.close())
-      ps.map(_.close())
+      rs.foreach(_.close())
+      ps.foreach(_.close())
     }
   }
 
@@ -39,7 +39,7 @@ object Squill extends Transaction with Query with Update {
       ps = Some(connection.prepareStatement(sqlStatement))
       ps.map(_.executeUpdate()).get
     } finally {
-      ps.map(_.close())
+      ps.foreach(_.close())
     }
   }
 }

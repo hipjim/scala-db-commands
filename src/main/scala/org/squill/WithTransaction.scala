@@ -3,8 +3,8 @@ package org.squill
 import java.sql.Connection
 
 /**
- * Created by cristipopovici on 3/24/14.
- */
+  * Created by cristipopovici on 3/24/14.
+  */
 private object WithTransaction {
   def apply[T](block: => T)(conn: Connection): T = {
     try {
@@ -13,17 +13,14 @@ private object WithTransaction {
       value
     }
     catch {
-      case th: Throwable => {
+      case th: Throwable =>
         if (conn != null) {
           conn.rollback()
         }
         throw th
-      }
     }
     finally {
-      if (conn != null) {
-        conn.close()
-      }
+      Option(conn).foreach(_.close())
     }
   }
 }
