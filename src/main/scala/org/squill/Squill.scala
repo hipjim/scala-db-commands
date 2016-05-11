@@ -1,12 +1,13 @@
 package org.squill
 
+import java.sql.{Connection, PreparedStatement, ResultSet}
 import javax.sql.DataSource
-import java.sql.{PreparedStatement, Connection, ResultSet}
+
 import scala.annotation.implicitNotFound
 
 /**
- * Created by cristipopovici on 3/24/14.
- */
+  * Created by cristipopovici on 3/24/14.
+  */
 object Squill extends Transaction with Query with Update {
 
   @implicitNotFound("implicit javax.sql.DataSource not found")
@@ -16,13 +17,14 @@ object Squill extends Transaction with Query with Update {
     WithTransaction(txBlock)(connection)
   }
 
-  def query[T](sqlStatement: String, params: Any*)(f: ResultSet => T)(implicit connection: Connection): Iterator[T] = {
+  def query[T](sqlStatement: String, params: Any*)(f: ResultSet => T)(
+      implicit connection: Connection): Iterator[T] = {
     var ps = Option.empty[PreparedStatement]
     var rs = Option.empty[ResultSet]
     try {
       ps = Some(connection.prepareStatement(sqlStatement))
-      ps.map(_.executeQuery()).map {
-        r => {
+      ps.map(_.executeQuery()).map { r =>
+        {
           rs = Some(r)
           ResultSetIterator(r).map(f)
         }
@@ -33,7 +35,8 @@ object Squill extends Transaction with Query with Update {
     }
   }
 
-  def update(sqlStatement: String, params: Any*)(implicit connection: Connection): Int = {
+  def update(sqlStatement: String, params: Any*)(
+      implicit connection: Connection): Int = {
     var ps = Option.empty[PreparedStatement]
     try {
       ps = Some(connection.prepareStatement(sqlStatement))
@@ -44,9 +47,8 @@ object Squill extends Transaction with Query with Update {
   }
 }
 
-private[this] case class ResultSetIterator(rs: ResultSet) extends Iterator[ResultSet] {
+private[this] case class ResultSetIterator(rs: ResultSet)
+    extends Iterator[ResultSet] {
   override def next(): ResultSet = rs
   override def hasNext: Boolean = rs.next()
 }
-
-

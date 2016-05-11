@@ -11,15 +11,13 @@ private object WithTransaction {
       val value = block
       conn.commit()
       value
-    }
-    catch {
+    } catch {
       case th: Throwable =>
         if (conn != null) {
           conn.rollback()
         }
         throw th
-    }
-    finally {
+    } finally {
       Option(conn).foreach(_.close())
     }
   }
