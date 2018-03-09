@@ -4,6 +4,7 @@ import java.sql.{Connection, PreparedStatement, ResultSet}
 import javax.sql.DataSource
 
 import scala.annotation.implicitNotFound
+import scala.util.Try
 
 /**
   * Created by cristipopovici on 3/24/14.
@@ -17,26 +18,15 @@ object Squill extends Transaction with Query with Update {
     WithTransaction(txBlock)(connection)
   }
 
-  def query[T](sqlStatement: String, params: Any*)(f: ResultSet => T)(
-      implicit connection: Connection): Iterator[T] = {
-    var ps = Option.empty[PreparedStatement]
-    var rs = Option.empty[ResultSet]
-    try {
-      ps = Some(connection.prepareStatement(sqlStatement))
-      ps.map(_.executeQuery()).map { r =>
-        {
-          rs = Some(r)
-          ResultSetIterator(r).map(f)
-        }
-      } getOrElse Iterator.empty[T]
-    } finally {
-      rs.foreach(_.close())
-      ps.foreach(_.close())
+  def query[T](sql: String, params: Any*)(f: ResultSet => T)(implicit connection: Connection): Try[Seq[T]] =
+    Try {
+      val ps: PreparedStatement = connection.prepareStatement(sql)
+      val rs: ResultSet = ps.executeQuery()
+      ResultSetIterator(rs).map(f).toSeq
     }
-  }
 
   def update(sqlStatement: String, params: Any*)(
-      implicit connection: Connection): Int = {
+    implicit connection: Connection): Int = {
     var ps = Option.empty[PreparedStatement]
     try {
       ps = Some(connection.prepareStatement(sqlStatement))
@@ -48,7 +38,8 @@ object Squill extends Transaction with Query with Update {
 }
 
 private[this] case class ResultSetIterator(rs: ResultSet)
-    extends Iterator[ResultSet] {
+  extends Iterator[ResultSet] {
   override def next(): ResultSet = rs
+
   override def hasNext: Boolean = rs.next()
 }
