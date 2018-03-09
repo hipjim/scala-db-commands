@@ -5,10 +5,13 @@ import org.squill.Squill._
 
 import scala.util.{Failure, Success}
 
-class SquillSpec extends FlatSpec with Matchers with H2 with UserHelper {
+class SquillSpec extends FlatSpec with Matchers with BeforeAndAfter with H2 with UserHelper {
+
+  before {
+    prepare
+  }
 
   "a user correct select query " should " return the user" in {
-    prepare
     query("select id, name, surname from user where id = 1") { rs =>
       User(rs.getInt(1), rs.getString(2), rs.getString(3))
     } match {
@@ -18,7 +21,6 @@ class SquillSpec extends FlatSpec with Matchers with H2 with UserHelper {
   }
 
   "a user incorrect select query " should " throw exception " in {
-    prepare
     assertThrows[org.h2.jdbc.JdbcSQLException](
       query("select id, name, surname from use where id = 1") { rs =>
         User(rs.getInt(1), rs.getString(2), rs.getString(3))
@@ -27,7 +29,6 @@ class SquillSpec extends FlatSpec with Matchers with H2 with UserHelper {
   }
 
   "a user correct results query " should " return the user" in {
-    prepare
     val users = results("select id, name, surname from user where id = 1") { rs =>
       User(rs.getInt(1), rs.getString(2), rs.getString(3))
     }.head
@@ -35,7 +36,6 @@ class SquillSpec extends FlatSpec with Matchers with H2 with UserHelper {
   }
 
   "a user incorrect results query " should " return empty sequence" in {
-    prepare
     val users = results("select id, name, surname from use where id = 1") { rs =>
       User(rs.getInt(1), rs.getString(2), rs.getString(3))
     }
