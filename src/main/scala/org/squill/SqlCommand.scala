@@ -17,11 +17,10 @@ trait Query extends SqlCommand {
   def results[T](sqlStatement: String, params: Any*)(rs: ResultSet => T)(implicit connection: Connection): Seq[T] =
     query(sqlStatement, params)(rs) match {
       case Success(res) => res
-      case Failure(ex) => {
+      case Failure(ex) =>
         //TODO: add logging and correct logging level for errors
         ex.printStackTrace()
         Seq.empty[T]
-      }
     }
 }
 
